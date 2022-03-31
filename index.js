@@ -14,6 +14,6 @@ app.use((req, res, next) => {
   return next()
 })
 
-app.use('/api', require('./api'))
+app.use('/api', require('./src/api'))
 
 app.listen(3000, () => console.log('server listening on port 3000'))

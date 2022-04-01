@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 const express = require('express')
 
 const app = express()
@@ -16,4 +17,8 @@ app.use((req, res, next) => {
 
 app.use('/api', require('./src/api'))
 
+let index = 0
+
 app.listen(3000, () => console.log('server listening on port 3000'))
+
+module.exports = index

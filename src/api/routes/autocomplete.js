@@ -35,11 +35,7 @@ router.get('/', withSchema(schema), (async (req, res) => {
       response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY3}`)
     }
 
-    if (response === undefined) {
-      throw new Error('apis rate limit')
-    }
-
-    const { data } = response
+    const { data = {} } = response
 
     console.log(data)
     console.log(`api request succeed at ${index + 1} trial`)
@@ -51,7 +47,7 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } catch (e) {
     if (index > 1) {
       console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
-      const { response: { status, data: { Message: message } } } = e
+      const { response: { status = {}, data: { Message: message = '' } } } = e
 
       index = 0
       return res.status(status || 500).json({

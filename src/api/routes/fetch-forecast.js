@@ -14,7 +14,7 @@ const withSchema = require('../middleware/with-schema')
 
 const schema = yup.object({
   query: yup.object({
-    locationName: yup.string().matches(/^[a-zA-Z]+$/g).required(),
+    locationName: yup.string().matches(/^[a-zA-Z\s/g]/g).required(),
   }),
 })
 
@@ -39,14 +39,10 @@ router.get('/', withSchema(schema), (async (req, res) => {
       response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY3}&q=${locationName}`)
     }
 
-    if (response === undefined) {
+    const { data = {} } = response
+
+    if (data === {}) {
       throw new Error('apis rate limit')
-    }
-
-    const { data } = response
-
-    if (!data.length) {
-      throw new Error('range error')
     }
 
     console.log('fetched key successfully')
@@ -98,22 +94,24 @@ router.get('/', withSchema(schema), (async (req, res) => {
       }
     })
 
-    console.log('daily forecast: ', daily)
+    console.log(`daily forecast: , ${daily}, index = ${index}`)
+    index = 0
 
     return res.json({
       data: daily,
     })
   } catch (e) {
-    console.log({ stack: e.stack }, 'error with fetch-forecast route', { message: e.toString() })
+    console.log(`trial number ${index + 1} failed`)
+    if (index > 1) {
+      console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
+      const { response: { status, data: { Message: message } } } = e
 
-    if (index > 2) {
       index = 0
-      return res.status(500).json({
+      return res.status(status || 500).json({
         error: e,
+        message: message || '',
       })
     }
-
-    console.log(`trial number ${index + 1} failed`)
 
     index += 1
     return res.redirect(`http://localhost:3000/api/fetch-forecast?locationName=${locationName}`)

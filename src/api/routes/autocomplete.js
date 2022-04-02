@@ -12,7 +12,7 @@ const withSchema = require('../middleware/with-schema')
 
 const schema = yup.object({
   query: yup.object({
-    text: yup.string().matches(/^[a-zA-Z]+$/g).required(),
+    text: yup.string().matches(/^[a-zA-Z\s/g]/g).required(),
   }),
 })
 
@@ -24,7 +24,7 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } = req
 
   try {
-    console.log('fetching autocompleting cities')
+    console.log('tring to fetch autocompleting cities')
     let response
 
     if (index === 0) {
@@ -36,23 +36,27 @@ router.get('/', withSchema(schema), (async (req, res) => {
     }
 
     if (response === undefined) {
-      throw new Error('range error')
+      throw new Error('apis rate limit')
     }
 
     const { data } = response
 
+    console.log(data)
     console.log(`api request succeed at ${index + 1} trial`)
+    index = 0
 
     return res.json({
       cities: data,
     })
   } catch (e) {
-    console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
+    if (index > 1) {
+      console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
+      const { response: { status, data: { Message: message } } } = e
 
-    if (index > 2) {
       index = 0
-      return res.status(500).json({
+      return res.status(status || 500).json({
         error: e,
+        message: message || '',
       })
     }
 

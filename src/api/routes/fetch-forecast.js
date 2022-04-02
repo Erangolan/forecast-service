@@ -8,6 +8,7 @@ const {
   API_KEY3,
   LOCATION_API_URL,
   FORECAST_API_URL,
+  SERVICE_URI,
 } = require('../../consts')
 
 const withSchema = require('../middleware/with-schema')
@@ -104,17 +105,17 @@ router.get('/', withSchema(schema), (async (req, res) => {
     console.log(`trial number ${index + 1} failed`)
     if (index > 1) {
       console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
-      const { response: { status, data: { Message: message } } } = e
+      const { response: { status = 500, data: { Message: message = '' } } } = e
 
       index = 0
-      return res.status(status || 500).json({
+      return res.status(status).json({
         error: e,
         message: message || '',
       })
     }
 
     index += 1
-    return res.redirect(`http://localhost:3000/api/fetch-forecast?locationName=${locationName}`)
+    return res.redirect(`${SERVICE_URI}/fetch-forecast?locationName=${locationName}`)
   }
 }))
 

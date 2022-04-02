@@ -10,6 +10,7 @@ const {
   LOCATION_API_URL,
   FORECAST_API_URL,
   LOCATION_API_AUTOCOMPLETE,
+  SERVICE_URI,
 } = process.env
 
 module.exports = {
@@ -20,5 +21,6 @@ module.exports = {
   LOCATION_API_URL,
   FORECAST_API_URL,
   LOCATION_API_AUTOCOMPLETE,
+  SERVICE_URI,
   SERVICE_NAME: `${packagejson.name}:${packagejson.version}`,
 }

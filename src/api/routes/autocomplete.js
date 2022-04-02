@@ -7,6 +7,7 @@ const {
   API_KEY2,
   API_KEY3,
   LOCATION_API_AUTOCOMPLETE,
+  SERVICE_URI,
 } = require('../../consts')
 const withSchema = require('../middleware/with-schema')
 
@@ -47,17 +48,17 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } catch (e) {
     if (index > 1) {
       console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
-      const { response: { status = {}, data: { Message: message = '' } } } = e
+      const { response: { status = 500, data: { Message: message = '' } } } = e
 
       index = 0
-      return res.status(status || 500).json({
+      return res.status(status).json({
         error: e,
         message: message || '',
       })
     }
 
     index += 1
-    return res.redirect(`http://localhost:3000/api/autocomplete?text=${text}`)
+    return res.redirect(`${SERVICE_URI}/autocomplete?text=${text}`)
   }
 }))
 

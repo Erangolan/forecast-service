@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const axios = require('axios')
 const yup = require('yup')
-let index = require('../../../index')
+let { forecastIndex } = require('../../../index')
 const {
   API_KEY1,
   API_KEY2,
@@ -32,11 +32,11 @@ router.get('/', withSchema(schema), (async (req, res) => {
     console.log('tring to fetch location key, in fetch-forecast')
     let response
 
-    if (index === 0) {
+    if (forecastIndex === 0) {
       response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY1}&q=${locationName}`)
-    } else if (index === 1) {
+    } else if (forecastIndex === 1) {
       response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY2}&q=${locationName}`)
-    } else if (index === 2) {
+    } else if (forecastIndex === 2) {
       response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY3}&q=${locationName}`)
     }
 
@@ -52,11 +52,11 @@ router.get('/', withSchema(schema), (async (req, res) => {
       Key: locationKey,
     } = data[0]
 
-    if (index === 0) {
+    if (forecastIndex === 0) {
       response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY1}&details=true`)
-    } else if (index === 1) {
+    } else if (forecastIndex === 1) {
       response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY2}&details=true`)
-    } else if (index === 2) {
+    } else if (forecastIndex === 2) {
       response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY3}&details=true`)
     }
 
@@ -95,26 +95,26 @@ router.get('/', withSchema(schema), (async (req, res) => {
       }
     })
 
-    console.log(`daily forecast: , ${daily}, index = ${index}`)
-    index = 0
+    console.log(`daily forecast: , ${daily}, forecastIndex = ${forecastIndex}`)
+    forecastIndex = 0
 
     return res.json({
       data: daily,
     })
   } catch (e) {
-    console.log(`trial number ${index + 1} failed`)
-    if (index > 1) {
+    console.log(`trial number ${forecastIndex + 1} failed`)
+    if (forecastIndex > 1) {
       console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
       const { response: { status = 500, data: { Message: message = '' } } } = e
 
-      index = 0
+      forecastIndex = 0
       return res.status(status).json({
         error: e,
         message: message || '',
       })
     }
 
-    index += 1
+    forecastIndex += 1
     return res.redirect(`${SERVICE_URI}/fetch-forecast?locationName=${locationName}`)
   }
 }))

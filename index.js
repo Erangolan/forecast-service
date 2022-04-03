@@ -17,8 +17,12 @@ app.use((req, res, next) => {
 
 app.use('/api', require('./src/api'))
 
-let index = 0
+let autocompleteIndex = 0
+let forecastIndex = 0
 
 app.listen(3000, () => console.log('server listening on port 3000'))
 
-module.exports = index
+module.exports = {
+  autocompleteIndex,
+  forecastIndex,
+}

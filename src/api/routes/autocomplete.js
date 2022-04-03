@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const axios = require('axios')
 const yup = require('yup')
-let index = require('../../../index')
+let { autocompleteIndex } = require('../../../index')
 const {
   API_KEY1,
   API_KEY2,
@@ -25,39 +25,39 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } = req
 
   try {
-    console.log('tring to fetch autocompleting cities')
+    console.log('tring to fetch autocompleting cities ', autocompleteIndex)
     let response
 
-    if (index === 0) {
+    if (autocompleteIndex === 0) {
       response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY1}`)
-    } else if (index === 1) {
+    } else if (autocompleteIndex === 1) {
       response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY2}`)
-    } else if (index === 2) {
+    } else if (autocompleteIndex === 2) {
       response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY3}`)
     }
 
     const { data = {} } = response
 
     console.log(data)
-    console.log(`api request succeed at ${index + 1} trial`)
-    index = 0
+    console.log(`api request succeed at ${autocompleteIndex + 1} trial`)
+    autocompleteIndex = 0
 
     return res.json({
       cities: data,
     })
   } catch (e) {
-    if (index > 1) {
+    if (autocompleteIndex > 1) {
       console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
       const { response: { status = 500, data: { Message: message = '' } } } = e
 
-      index = 0
+      autocompleteIndex = 0
       return res.status(status).json({
         error: e,
         message: message || '',
       })
     }
 
-    index += 1
+    autocompleteIndex += 1
     return res.redirect(`${SERVICE_URI}/autocomplete?text=${text}`)
   }
 }))

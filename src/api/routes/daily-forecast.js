@@ -3,7 +3,7 @@ const yup = require('yup')
 const { FORECAST_API_URL } = require('../../consts')
 const api = require('../requests/request')
 const withSchema = require('../middleware/with-schema')
-const { converter } = require('../funcs/converter')
+const converter = require('../funcs/converter')
 
 const schema = yup.object({
   query: yup.object({

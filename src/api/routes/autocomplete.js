@@ -1,15 +1,8 @@
 const router = require('express').Router()
-const axios = require('axios')
 const yup = require('yup')
-let { autocompleteIndex } = require('../../../index')
-const {
-  API_KEY1,
-  API_KEY2,
-  API_KEY3,
-  LOCATION_API_AUTOCOMPLETE,
-  SERVICE_URI,
-} = require('../../consts')
+const { LOCATION_API_AUTOCOMPLETE } = require('../../consts')
 const withSchema = require('../middleware/with-schema')
+const api = require('../requests/request')
 
 const schema = yup.object({
   query: yup.object({
@@ -25,40 +18,28 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } = req
 
   try {
-    console.log('tring to fetch autocompleting cities ', autocompleteIndex)
-    let response
+    console.log('tring to fetch autocompleting cities')
 
-    if (autocompleteIndex === 0) {
-      response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY1}`)
-    } else if (autocompleteIndex === 1) {
-      response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY2}`)
-    } else if (autocompleteIndex === 2) {
-      response = await axios(`${LOCATION_API_AUTOCOMPLETE}?q=${text}&apikey=${API_KEY3}`)
-    }
-
-    const { data = {} } = response
-
-    console.log(data)
-    console.log(`api request succeed at ${autocompleteIndex + 1} trial`)
-    autocompleteIndex = 0
-
-    return res.json({
-      cities: data,
+    const { body, statusCode } = await api({
+      url: LOCATION_API_AUTOCOMPLETE,
+      params: {
+        q: text,
+      },
     })
-  } catch (e) {
-    if (autocompleteIndex > 1) {
-      console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
-      const { response: { status = 500, data: { Message: message = '' } } } = e
 
-      autocompleteIndex = 0
-      return res.status(status).json({
-        error: e,
-        message: message || '',
+    if (statusCode !== 200) {
+      return res.status(statusCode).json({
+        message: body.Message,
       })
     }
 
-    autocompleteIndex += 1
-    return res.redirect(`${SERVICE_URI}/autocomplete?text=${text}`)
+    return res.json({ cities: body })
+  } catch (e) {
+    console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
+
+    return res.status(503).json({
+      error: e,
+    })
   }
 }))
 

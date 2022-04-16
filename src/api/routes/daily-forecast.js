@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const yup = require('yup')
 const { FORECAST_API_URL } = require('../../consts')
-const api = require('../requests/request')
+const api = require('../funcs/request')
 const withSchema = require('../middleware/with-schema')
 const converter = require('../funcs/converter')
 

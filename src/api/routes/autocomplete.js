@@ -2,7 +2,7 @@ const router = require('express').Router()
 const yup = require('yup')
 const { LOCATION_API_AUTOCOMPLETE } = require('../../consts')
 const withSchema = require('../middleware/with-schema')
-const api = require('../requests/request')
+const api = require('../funcs/request')
 
 const schema = yup.object({
   query: yup.object({

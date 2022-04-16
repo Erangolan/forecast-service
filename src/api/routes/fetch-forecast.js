@@ -4,7 +4,7 @@ const {
   LOCATION_API_URL,
   SERVICE_URI,
 } = require('../../consts')
-const api = require('../requests/request')
+const api = require('../funcs/request')
 const withSchema = require('../middleware/with-schema')
 
 const schema = yup.object({

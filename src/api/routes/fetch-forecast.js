@@ -1,16 +1,10 @@
 const router = require('express').Router()
-const axios = require('axios')
 const yup = require('yup')
-let { forecastIndex } = require('../../../index')
 const {
-  API_KEY1,
-  API_KEY2,
-  API_KEY3,
   LOCATION_API_URL,
-  FORECAST_API_URL,
   SERVICE_URI,
 } = require('../../consts')
-
+const api = require('../requests/request')
 const withSchema = require('../middleware/with-schema')
 
 const schema = yup.object({
@@ -18,8 +12,6 @@ const schema = yup.object({
     locationName: yup.string().matches(/^[a-zA-Z\s/g]/g).required(),
   }),
 })
-
-const { handler } = require('../controllers/forecast.controller')
 
 router.get('/', withSchema(schema), (async (req, res) => {
   const {
@@ -29,93 +21,31 @@ router.get('/', withSchema(schema), (async (req, res) => {
   } = req
 
   try {
-    console.log('tring to fetch location key, in fetch-forecast')
-    let response
+    console.log('tring to fetch location key')
 
-    if (forecastIndex === 0) {
-      response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY1}&q=${locationName}`)
-    } else if (forecastIndex === 1) {
-      response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY2}&q=${locationName}`)
-    } else if (forecastIndex === 2) {
-      response = await axios(`${LOCATION_API_URL}/search?apikey=${API_KEY3}&q=${locationName}`)
-    }
-
-    const { data = {} } = response
-
-    if (data === {}) {
-      throw new Error('apis rate limit')
-    }
-
-    console.log('fetched key successfully')
-
-    const {
-      Key: locationKey,
-    } = data[0]
-
-    if (forecastIndex === 0) {
-      response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY1}&details=true`)
-    } else if (forecastIndex === 1) {
-      response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY2}&details=true`)
-    } else if (forecastIndex === 2) {
-      response = await axios(`${FORECAST_API_URL}/${locationKey}?apikey=${API_KEY3}&details=true`)
-    }
-
-    const { data: { DailyForecasts } } = response
-
-    console.log('fetched forecast successfully')
-
-    const daily = DailyForecasts.map((item) => {
-      const {
-        Date,
-        Temperature,
-        Day,
-        Night,
-        HoursOfSun,
-      } = item
-
-      const id = Date.slice(0, 10)
-      const { Minimum: minF, Maximum: maxF } = Temperature
-      const { Icon: dayIcon, ShortPhrase: ShortPhraseDay } = Day
-      const { Icon: nightIcon, ShortPhrase: ShortPhraseNight } = Night
-
-      const minC = handler(minF)
-      const maxC = handler(maxF)
-
-      return {
-        id,
-        minF,
-        maxF,
-        minC,
-        maxC,
-        dayIcon,
-        nightIcon,
-        ShortPhraseDay,
-        ShortPhraseNight,
-        HoursOfSun,
-      }
+    const { body: [data], statusCode } = await api({
+      url: LOCATION_API_URL,
+      params: {
+        q: locationName,
+      },
     })
 
-    console.log(`daily forecast: , ${daily}, forecastIndex = ${forecastIndex}`)
-    forecastIndex = 0
-
-    return res.json({
-      data: daily,
-    })
-  } catch (e) {
-    console.log(`trial number ${forecastIndex + 1} failed`)
-    if (forecastIndex > 1) {
-      console.log({ stack: e.stack }, 'error with autocomplete route', { message: e.toString() })
-      const { response: { status = 500, data: { Message: message = '' } } } = e
-
-      forecastIndex = 0
-      return res.status(status).json({
-        error: e,
-        message: message || '',
+    if (statusCode !== 200) {
+      return res.status(statusCode).json({
+        message: data.Message,
       })
     }
 
-    forecastIndex += 1
-    return res.redirect(`${SERVICE_URI}/fetch-forecast?locationName=${locationName}`)
+    const { Key: locationKey } = data
+    console.log('fetched key successfully!')
+
+    return res.redirect(`${SERVICE_URI}/daily-forecast?locationKey=${locationKey}`)
+  } catch (e) {
+    console.log({ stack: e.stack }, 'error with fetch-forecast route', { message: e.toString() })
+
+    return res.status(503).json({
+      error: e,
+    })
   }
 }))
 
